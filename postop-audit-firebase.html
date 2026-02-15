@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Post-Op Audit">
+    <meta name="theme-color" content="#f5576c">
+    <title>Post-Op Audit - Firebase</title>
+    
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><defs><linearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' style='stop-color:%23f093fb;stop-opacity:1'/><stop offset='100%25' style='stop-color:%23f5576c;stop-opacity:1'/></linearGradient></defs><rect width='180' height='180' fill='url(%23grad)'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='90' fill='white'>📊</text></svg>">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            padding: 20px;
+            padding-bottom: 80px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Login Screen */
+        .login-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .login-card h1 {
+            color: #f5576c;
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .login-card p {
+            color: #718096;
+            margin-bottom: 32px;
+        }
+
+        .google-btn {
+            background: white;
+            border: 2px solid #e2e8f0;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .google-btn:hover {
+            border-color: #f5576c;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245,87,108,0.3);
+        }
+
+        .sync-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            color: white;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #48bb78;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            color: white;
+            margin-bottom: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .user-details {
+            flex: 1;
+            text-align: left;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-email {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #f5576c;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header .subtitle {
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .header .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .stat {
+            background: #fff5f7;
+            padding: 12px 16px;
+            border-radius: 8px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .stat-subtext {
+            font-size: 11px;
+            color: #a0aec0;
+            margin-top: 2px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: white;
+            color: #f5576c;
+        }
+
+        .content {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2d3748;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #f5576c;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-item label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: #f5576c;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #e04858;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245,87,108,0.4);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #2d3748;
+            margin-top: 12px;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .patient-list {
+            margin-top: 20px;
+        }
+
+        .patient-item {
+            background: #fff5f7;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid #f5576c;
+        }
+
+        .patient-item:hover {
+            background: #ffe5e9;
+            transform: translateX(4px);
+        }
+
+        .patient-item.has-complication {
+            border-left-color: #e53e3e;
+            background: #fff5f5;
+        }
+
+        .patient-item.discharged {
+            border-left-color: #38a169;
+            background: #f0fff4;
+        }
+
+        .patient-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+
+        .patient-name {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 16px;
+        }
+
+        .patient-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .status-discharged {
+            background: #c6f6d5;
+            color: #2f855a;
+        }
+
+        .patient-details {
+            color: #4a5568;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #718096;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .btn-remove {
+            background: #fc8181;
+            color: white;
+        }
+
+        .btn-remove:hover {
+            background: #f56565;
+        }
+
+        .error-message {
+            background: #fc8181;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .added-by {
+            font-size: 12px;
+            color: #a0aec0;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 640px) {
+            .form-row, .form-row-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Login Screen -->
+        <div id="loginScreen" class="login-screen">
+            <div class="login-card">
+                <h1>📊 Post-Op Audit</h1>
+                <p>Sign in to access shared team audit data</p>
+                <button class="google-btn" onclick="signInWithGoogle()">
+                    <svg width="20" height="20" viewBox="0 0 20 20">
+                        <path fill="#4285F4" d="M19.6 10.23c0-.82-.1-1.42-.25-2.05H10v3.72h5.5c-.15.96-.74 2.31-2.04 3.22v2.45h3.16c1.89-1.73 2.98-4.3 2.98-7.34z"/>
+                        <path fill="#34A853" d="M13.46 15.13c-.83.59-1.96 1-3.46 1-2.64 0-4.88-1.74-5.68-4.15H1.07v2.52C2.72 17.75 6.09 20 10 20c2.7 0 4.96-.89 6.62-2.42l-3.16-2.45z"/>
+                        <path fill="#FBBC05" d="M3.99 10c0-.69.12-1.35.32-1.97V5.51H1.07A9.973 9.973 0 000 10c0 1.61.39 3.14 1.07 4.49l3.24-2.52c-.2-.62-.32-1.28-.32-1.97z"/>
+                        <path fill="#EA4335" d="M10 3.88c1.88 0 3.13.81 3.85 1.48l2.84-2.76C14.96.99 12.7 0 10 0 6.09 0 2.72 2.25 1.07 5.51l3.24 2.52C5.12 5.62 7.36 3.88 10 3.88z"/>
+                    </svg>
+                    Sign in with Google
+                </button>
+            </div>
+        </div>
+
+        <!-- Main App -->
+        <div id="mainApp" style="display: none;">
+            <!-- User Info -->
+            <div class="user-info">
+                <img id="userAvatar" class="user-avatar" src="" alt="User">
+                <div class="user-details">
+                    <div class="user-name" id="userName"></div>
+                    <div class="user-email" id="userEmail"></div>
+                </div>
+                <button class="logout-btn" onclick="signOut()">Sign Out</button>
+            </div>
+            
+            <div class="sync-status">
+                <div class="sync-dot"></div>
+                <span id="syncStatus">Synced</span>
+            </div>
+
+            <!-- Header with Stats -->
+            <div class="header">
+                <h1>Post-Op Audit</h1>
+                <div class="subtitle">Shared team surgical outcomes tracking</div>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-label">Total Patients</div>
+                        <div class="stat-value" id="totalPatients">0</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Complications</div>
+                        <div class="stat-value" id="complicationCount">0</div>
+                        <div class="stat-subtext" id="complicationRate">0%</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Readmissions</div>
+                        <div class="stat-value" id="readmissionCount">0</div>
+                        <div class="stat-subtext" id="readmissionRate">0%</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Active Follow-ups</div>
+                        <div class="stat-value" id="activeCount">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('add')">➕ Add Patient</button>
+                <button class="tab" onclick="switchTab('patients')">📋 Patients</button>
+                <button class="tab" onclick="switchTab('settings')">⚙️ Settings</button>
+            </div>
+
+            <!-- Add Patient Tab -->
+            <div id="addTab" class="content">
+                <h2>Add Patient Record</h2>
+                <div id="errorMessage" class="error-message" style="display: none;"></div>
+                
+                <div class="form-row-3">
+                    <div class="form-group">
+                        <label>Patient Name</label>
+                        <input type="text" id="patientName">
+                    </div>
+                    <div class="form-group">
+                        <label>Patient ID *</label>
+                        <input type="text" id="patientId" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Surgery Date *</label>
+                        <input type="date" id="surgeryDate" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Hospital</label>
+                        <input type="text" id="hospital">
+                    </div>
+                    <div class="form-group">
+                        <label>Age</label>
+                        <input type="number" id="age" min="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Procedure *</label>
+                    <input type="text" id="procedure" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Diagnosis</label>
+                    <textarea id="diagnosis"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Complications</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="comp-wound" value="Wound Infection">
+                            <label for="comp-wound">Wound Infection</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="comp-bleeding" value="Post-op Bleeding">
+                            <label for="comp-bleeding">Post-op Bleeding</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="comp-pneumonia" value="Pneumonia">
+                            <label for="comp-pneumonia">Pneumonia</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="comp-dvt" value="DVT/PE">
+                            <label for="comp-dvt">DVT/PE</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="comp-sepsis" value="Sepsis">
+                            <label for="comp-sepsis">Sepsis</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="comp-leak" value="Anastomotic Leak">
+                            <label for="comp-leak">Anastomotic Leak</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="comp-flap-partial" value="Flap Loss - Partial">
+                            <label for="comp-flap-partial">Flap Loss - Partial</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="comp-flap-total" value="Flap Loss - Total">
+                            <label for="comp-flap-total">Flap Loss - Total</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="comp-fistula" value="OC Fistula">
+                            <label for="comp-fistula">OC Fistula</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="comp-cardiac" value="Cardiac Event">
+                            <label for="comp-cardiac">Cardiac Event</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="comp-other" value="Other">
+                            <label for="comp-other">Other</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Complication Notes</label>
+                    <textarea id="complicationNotes" placeholder="Describe complications in detail..."></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Clavien-Dindo Grade</label>
+                        <select id="clavienDindo">
+                            <option value="">Select</option>
+                            <option value="Grade I">Grade I</option>
+                            <option value="Grade II">Grade II</option>
+                            <option value="Grade IIIa">Grade IIIa</option>
+                            <option value="Grade IIIb">Grade IIIb</option>
+                            <option value="Grade IVa">Grade IVa</option>
+                            <option value="Grade IVb">Grade IVb</option>
+                            <option value="Grade V">Grade V</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Wound Status at Discharge</label>
+                        <select id="woundStatus">
+                            <option value="">Select</option>
+                            <option value="Clean, healing well">Clean, healing well</option>
+                            <option value="Minor inflammation">Minor inflammation</option>
+                            <option value="Infection">Infection</option>
+                            <option value="Dehiscence">Dehiscence</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row-3">
+                    <div class="form-group">
+                        <label>Length of Stay (days)</label>
+                        <input type="number" id="lengthOfStay" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Discharge Date</label>
+                        <input type="date" id="dischargeDate">
+                    </div>
+                    <div class="form-group">
+                        <label>Readmission</label>
+                        <select id="readmission">
+                            <option value="No">No</option>
+                            <option value="Yes">Yes</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Readmission Details</label>
+                    <textarea id="readmissionNotes" placeholder="If readmitted, provide details..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Additional Remarks</label>
+                    <textarea id="remarks"></textarea>
+                </div>
+
+                <div id="customAuditContainer"></div>
+
+                <button class="btn btn-primary" onclick="savePatient()">💾 Save Patient Record</button>
+                <button class="btn btn-secondary" onclick="resetForm()">Clear Form</button>
+            </div>
+
+            <!-- Patients Tab -->
+            <div id="patientsTab" class="content" style="display: none;">
+                <h2>Patient Records</h2>
+                
+                <div class="form-group">
+                    <input type="text" id="searchInput" placeholder="🔍 Search patient names, IDs, procedures...">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <select id="filterStatus">
+                            <option value="all">All Status</option>
+                            <option value="active">Active Follow-up</option>
+                            <option value="discharged">Discharged</option>
+                            <option value="complications">With Complications</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <select id="filterDate">
+                            <option value="all">All Time</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="3months">Last 3 Months</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="patientsList" class="patient-list"></div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settingsTab" class="content" style="display: none;">
+                <h2>Settings</h2>
+
+                <h3 style="margin-bottom: 16px;">Custom Audit Criteria</h3>
+                <div id="customAuditList"></div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <input type="text" id="newAuditField" placeholder="Enter criterion name">
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary" onclick="addCustomAudit()">Add Criterion</button>
+                    </div>
+                </div>
+
+                <h3 style="margin: 32px 0 16px;">Export Data</h3>
+                <button class="btn btn-secondary" onclick="exportData()">📊 Export to CSV</button>
+                <button class="btn btn-secondary" onclick="exportSPSS()">📈 Export for SPSS</button>
+                <button class="btn btn-secondary" onclick="exportAllData()">💾 Backup All Data (JSON)</button>
+
+                <h3 style="margin: 32px 0 16px;">Import Data</h3>
+                <button class="btn btn-secondary" onclick="importData()">📁 Import Backup</button>
+                <input type="file" id="fileInput" accept=".json" style="display: none;">
+
+                <h3 style="margin: 32px 0 16px;">Danger Zone</h3>
+                <button class="btn btn-secondary btn-remove" onclick="clearAllData()">🗑️ Clear All Data</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Patient Details Modal -->
+    <div id="patientModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Patient Details</h3>
+                <button class="close-btn" onclick="closeModal()">×</button>
+            </div>
+            <div id="modalBody"></div>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button class="btn btn-primary" onclick="editPatient()" style="flex: 1;">Edit</button>
+                <button class="btn btn-secondary btn-remove" onclick="deletePatient()" style="flex: 1;">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut as firebaseSignOut } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, query, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBQ8slJIJmDcSkpI0GuJU6GAZNuupY-mb4",
+            authDomain: "surgical-tracker-fd4e4.firebaseapp.com",
+            projectId: "surgical-tracker-fd4e4",
+            storageBucket: "surgical-tracker-fd4e4.firebasestorage.app",
+            messagingSenderId: "127110170150",
+            appId: "1:127110170150:web:66567dbf2ea55af9ae88e7",
+            measurementId: "G-CYEEBS48GK"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Global state
+        window.currentUser = null;
+        window.patients = [];
+        window.customAuditFields = [];
+        window.currentPatientId = null;
+        window.editingPatientId = null;
+
+        // IMPORTANT: Shared collection name for team data
+        const SHARED_COLLECTION = 'postop-audit-shared';
+
+        // Authentication
+        window.signInWithGoogle = async function() {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error('Sign in error:', error);
+                alert('Sign in failed: ' + error.message);
+            }
+        };
+
+        window.signOut = async function() {
+            if (confirm('Are you sure you want to sign out?')) {
+                try {
+                    await firebaseSignOut(auth);
+                } catch (error) {
+                    console.error('Sign out error:', error);
+                }
+            }
+        };
+
+        // Auth state observer
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                window.currentUser = user;
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                
+                // Update user info
+                document.getElementById('userName').textContent = user.displayName || 'User';
+                document.getElementById('userEmail').textContent = user.email;
+                document.getElementById('userAvatar').src = user.photoURL || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23f5576c"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
+                
+                // Load shared data
+                await loadSharedData();
+                
+                // Set up real-time listeners
+                setupRealtimeListeners();
+            } else {
+                window.currentUser = null;
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('mainApp').style.display = 'none';
+            }
+        });
+
+        // Firestore operations - SHARED DATA
+        async function loadSharedData() {
+            if (!window.currentUser) return;
+
+            setSyncStatus('Syncing...', false);
+
+            try {
+                // Load custom audit fields
+                const fieldsDoc = await getDoc(doc(db, SHARED_COLLECTION, 'settings'));
+                if (fieldsDoc.exists()) {
+                    window.customAuditFields = fieldsDoc.data().customAuditFields || [];
+                }
+
+                // Load patients
+                const patientsSnapshot = await getDocs(collection(db, SHARED_COLLECTION, 'patients', 'records'));
+                window.patients = patientsSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+
+                renderPatients();
+                renderCustomAuditList();
+                renderCustomAuditInputs();
+                updateStats();
+                setSyncStatus('Synced', true);
+            } catch (error) {
+                console.error('Error loading data:', error);
+                setSyncStatus('Sync failed', false);
+                showError('Failed to load data: ' + error.message);
+            }
+        }
+
+        function setupRealtimeListeners() {
+            if (!window.currentUser) return;
+
+            // Listen to patients changes
+            const patientsQuery = query(collection(db, SHARED_COLLECTION, 'patients', 'records'));
+            onSnapshot(patientsQuery, (snapshot) => {
+                window.patients = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                renderPatients();
+                updateStats();
+            });
+
+            // Listen to custom audit fields changes
+            onSnapshot(doc(db, SHARED_COLLECTION, 'settings'), (doc) => {
+                if (doc.exists()) {
+                    window.customAuditFields = doc.data().customAuditFields || [];
+                    renderCustomAuditList();
+                    renderCustomAuditInputs();
+                }
+            });
+        }
+
+        window.savePatient = async function() {
+            if (!window.currentUser) {
+                showError('You must be signed in to save patient records');
+                return;
+            }
+
+            const patientId = document.getElementById('patientId').value;
+            const surgeryDate = document.getElementById('surgeryDate').value;
+            const procedure = document.getElementById('procedure').value;
+
+            if (!patientId || !surgeryDate || !procedure) {
+                showError('Please fill in all required fields');
+                return;
+            }
+
+            // Get selected complications
+            const complications = [];
+            document.querySelectorAll('.checkbox-item input[type="checkbox"]:checked').forEach(cb => {
+                complications.push(cb.value);
+            });
+
+            const patientData = {
+                patientName: document.getElementById('patientName').value,
+                patientId: patientId,
+                surgeryDate: surgeryDate,
+                hospital: document.getElementById('hospital').value,
+                procedure: procedure,
+                diagnosis: document.getElementById('diagnosis').value,
+                age: document.getElementById('age').value,
+                complications: complications,
+                complicationNotes: document.getElementById('complicationNotes').value,
+                clavienDindo: document.getElementById('clavienDindo').value,
+                woundStatus: document.getElementById('woundStatus').value,
+                lengthOfStay: document.getElementById('lengthOfStay').value,
+                dischargeDate: document.getElementById('dischargeDate').value,
+                readmission: document.getElementById('readmission').value,
+                readmissionNotes: document.getElementById('readmissionNotes').value,
+                remarks: document.getElementById('remarks').value,
+                customAudit: {},
+                addedBy: window.currentUser.email,
+                addedByName: window.currentUser.displayName || window.currentUser.email,
+                updatedAt: serverTimestamp()
+            };
+
+            // Collect custom audit values
+            window.customAuditFields.forEach(field => {
+                const input = document.getElementById(`audit-${field.id}`);
+                if (input) {
+                    patientData.customAudit[field.name] = input.value;
+                }
+            });
+
+            setSyncStatus('Saving...', false);
+
+            try {
+                const recordId = window.editingPatientId || Date.now().toString();
+                await setDoc(doc(db, SHARED_COLLECTION, 'patients', 'records', recordId), patientData);
+
+                setSyncStatus('Synced', true);
+                resetForm();
+                switchTab('patients');
+                
+                if (window.editingPatientId) {
+                    alert('✅ Patient record updated successfully!');
+                    window.editingPatientId = null;
+                } else {
+                    alert('✅ Patient record saved successfully!');
+                }
+            } catch (error) {
+                console.error('Error saving patient:', error);
+                setSyncStatus('Save failed', false);
+                showError('Failed to save patient record: ' + error.message);
+            }
+        };
+
+        window.deletePatient = async function() {
+            if (!window.currentPatientId || !window.currentUser) return;
+            
+            if (confirm('Are you sure you want to delete this patient record? This cannot be undone.')) {
+                setSyncStatus('Deleting...', false);
+                
+                try {
+                    await deleteDoc(doc(db, SHARED_COLLECTION, 'patients', 'records', window.currentPatientId));
+                    setSyncStatus('Synced', true);
+                    closeModal();
+                    alert('Patient record deleted successfully');
+                } catch (error) {
+                    console.error('Error deleting patient:', error);
+                    setSyncStatus('Delete failed', false);
+                    showError('Failed to delete patient record: ' + error.message);
+                }
+            }
+        };
+
+        window.addCustomAudit = async function() {
+            if (!window.currentUser) {
+                showError('You must be signed in to add custom audit criteria');
+                return;
+            }
+
+            const fieldName = document.getElementById('newAuditField').value.trim();
+            if (!fieldName) {
+                alert('Please enter a criterion name');
+                return;
+            }
+
+            window.customAuditFields.push({
+                id: Date.now(),
+                name: fieldName
+            });
+
+            setSyncStatus('Saving...', false);
+
+            try {
+                await setDoc(doc(db, SHARED_COLLECTION, 'settings'), {
+                    customAuditFields: window.customAuditFields,
+                    updatedAt: serverTimestamp()
+                });
+
+                setSyncStatus('Synced', true);
+                document.getElementById('newAuditField').value = '';
+            } catch (error) {
+                console.error('Error saving custom audit field:', error);
+                setSyncStatus('Save failed', false);
+                showError('Failed to save custom audit field: ' + error.message);
+            }
+        };
+
+        window.removeCustomAudit = async function(fieldId) {
+            if (!window.currentUser) return;
+
+            if (confirm('Remove this audit criterion? Data in existing records will be preserved.')) {
+                window.customAuditFields = window.customAuditFields.filter(f => f.id !== fieldId);
+                
+                setSyncStatus('Saving...', false);
+
+                try {
+                    await setDoc(doc(db, SHARED_COLLECTION, 'settings'), {
+                        customAuditFields: window.customAuditFields,
+                        updatedAt: serverTimestamp()
+                    });
+
+                    setSyncStatus('Synced', true);
+                } catch (error) {
+                    console.error('Error removing custom audit field:', error);
+                    setSyncStatus('Save failed', false);
+                    showError('Failed to remove custom audit field: ' + error.message);
+                }
+            }
+        };
+
+        window.clearAllData = async function() {
+            if (!window.currentUser) return;
+
+            if (confirm('⚠️ WARNING: This will delete ALL shared patient records and audit criteria. This affects ALL team members. This cannot be undone. Are you sure?')) {
+                if (confirm('Final confirmation: Delete EVERYTHING for the entire team?')) {
+                    setSyncStatus('Deleting...', false);
+
+                    try {
+                        // Delete all patients
+                        const patientsSnapshot = await getDocs(collection(db, SHARED_COLLECTION, 'patients', 'records'));
+                        const deletePromises = patientsSnapshot.docs.map(doc => deleteDoc(doc.ref));
+                        await Promise.all(deletePromises);
+
+                        // Delete settings
+                        await deleteDoc(doc(db, SHARED_COLLECTION, 'settings'));
+
+                        setSyncStatus('Synced', true);
+                        alert('All shared data cleared');
+                    } catch (error) {
+                        console.error('Error clearing data:', error);
+                        setSyncStatus('Delete failed', false);
+                        showError('Failed to clear data: ' + error.message);
+                    }
+                }
+            }
+        };
+
+        // UI Helper Functions
+        function setSyncStatus(message, success) {
+            const statusEl = document.getElementById('syncStatus');
+            statusEl.textContent = message;
+            const dot = document.querySelector('.sync-dot');
+            if (success) {
+                dot.style.background = '#48bb78';
+            } else {
+                dot.style.background = '#fc8181';
+            }
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            setTimeout(() => {
+                errorEl.style.display = 'none';
+            }, 5000);
+        }
+
+        // UI Rendering Functions
+        window.switchTab = function(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.content').forEach(c => c.style.display = 'none');
+
+            if (tab === 'add') {
+                event.target.classList.add('active');
+                document.getElementById('addTab').style.display = 'block';
+            } else if (tab === 'patients') {
+                event.target.classList.add('active');
+                document.getElementById('patientsTab').style.display = 'block';
+                renderPatients();
+            } else if (tab === 'settings') {
+                event.target.classList.add('active');
+                document.getElementById('settingsTab').style.display = 'block';
+            }
+        };
+
+        window.renderPatients = function() {
+            const list = document.getElementById('patientsList');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('filterStatus').value;
+            const dateFilter = document.getElementById('filterDate').value;
+
+            let filtered = window.patients.filter(p => {
+                const matchesSearch = (p.patientName && p.patientName.toLowerCase().includes(searchTerm)) ||
+                    p.patientId.toLowerCase().includes(searchTerm) ||
+                    p.procedure.toLowerCase().includes(searchTerm) ||
+                    (p.hospital && p.hospital.toLowerCase().includes(searchTerm));
+                
+                let matchesStatus = true;
+                if (statusFilter === 'active') {
+                    matchesStatus = !p.dischargeDate;
+                } else if (statusFilter === 'discharged') {
+                    matchesStatus = !!p.dischargeDate;
+                } else if (statusFilter === 'complications') {
+                    matchesStatus = p.complications && p.complications.length > 0;
+                }
+
+                let matchesDate = true;
+                if (dateFilter !== 'all') {
+                    const surgeryDate = new Date(p.surgeryDate);
+                    const now = new Date();
+                    
+                    if (dateFilter === 'week') {
+                        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                        matchesDate = surgeryDate >= weekAgo;
+                    } else if (dateFilter === 'month') {
+                        matchesDate = surgeryDate.getMonth() === now.getMonth() && 
+                                     surgeryDate.getFullYear() === now.getFullYear();
+                    } else if (dateFilter === '3months') {
+                        const threeMonthsAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+                        matchesDate = surgeryDate >= threeMonthsAgo;
+                    }
+                }
+
+                return matchesSearch && matchesStatus && matchesDate;
+            });
+
+            filtered.sort((a, b) => new Date(b.surgeryDate) - new Date(a.surgeryDate));
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #718096; padding: 40px;">No patient records found</p>';
+                return;
+            }
+
+            list.innerHTML = filtered.map(p => {
+                const hasComplication = p.complications && p.complications.length > 0;
+                const isDischarged = !!p.dischargeDate;
+                const itemClass = hasComplication ? 'patient-item has-complication' : 
+                                 isDischarged ? 'patient-item discharged' : 'patient-item';
+                
+                return `
+                    <div class="${itemClass}" onclick="showPatientDetails('${p.id}')">
+                        <div class="patient-header">
+                            <div class="patient-name">${p.patientName || p.patientId}</div>
+                            <div class="patient-status ${isDischarged ? 'status-discharged' : 'status-active'}">
+                                ${isDischarged ? 'Discharged' : 'Active'}
+                            </div>
+                        </div>
+                        <div class="patient-details">
+                            <div>🔖 ${p.patientId} • 📅 ${formatDate(p.surgeryDate)}</div>
+                            <div>🏥 ${p.hospital || 'N/A'} • ⚕️ ${p.procedure}</div>
+                            ${hasComplication ? `<div style="color: #e53e3e; font-weight: 600;">⚠️ ${p.complications.length} complication(s)</div>` : ''}
+                            <div class="added-by">Added by: ${p.addedByName || p.addedBy}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        };
+
+        window.showPatientDetails = function(patientId) {
+            window.currentPatientId = patientId;
+            const patient = window.patients.find(p => p.id === patientId);
+            if (!patient) return;
+
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <div style="line-height: 1.8;">
+                    ${patient.patientName ? `<p><strong>👤 Patient Name:</strong> ${patient.patientName}</p>` : ''}
+                    <p><strong>🔖 Patient ID:</strong> ${patient.patientId}</p>
+                    <p><strong>📅 Surgery Date:</strong> ${formatDate(patient.surgeryDate)}</p>
+                    <p><strong>🏥 Hospital:</strong> ${patient.hospital || 'N/A'}</p>
+                    <p><strong>⚕️ Procedure:</strong> ${patient.procedure}</p>
+                    ${patient.diagnosis ? `<p><strong>🔬 Diagnosis:</strong> ${patient.diagnosis}</p>` : ''}
+                    ${patient.age ? `<p><strong>👶 Age:</strong> ${patient.age}</p>` : ''}
+                    ${patient.complications && patient.complications.length > 0 ? 
+                        `<p><strong>⚠️ Complications:</strong> ${patient.complications.join(', ')}</p>` : 
+                        '<p><strong>✅ No complications</strong></p>'}
+                    ${patient.complicationNotes ? `<p><strong>Complication Details:</strong> ${patient.complicationNotes}</p>` : ''}
+                    ${patient.clavienDindo ? `<p><strong>Clavien-Dindo:</strong> ${patient.clavienDindo}</p>` : ''}
+                    ${patient.woundStatus ? `<p><strong>Wound Status:</strong> ${patient.woundStatus}</p>` : ''}
+                    ${patient.lengthOfStay ? `<p><strong>Length of Stay:</strong> ${patient.lengthOfStay} days</p>` : ''}
+                    ${patient.dischargeDate ? `<p><strong>Discharge Date:</strong> ${formatDate(patient.dischargeDate)}</p>` : ''}
+                    <p><strong>Readmission:</strong> ${patient.readmission}</p>
+                    ${patient.readmissionNotes ? `<p><strong>Readmission Details:</strong> ${patient.readmissionNotes}</p>` : ''}
+                    ${patient.remarks ? `<p><strong>Remarks:</strong> ${patient.remarks}</p>` : ''}
+                    ${Object.keys(patient.customAudit || {}).map(key => 
+                        `<p><strong>${key}:</strong> ${patient.customAudit[key]}</p>`
+                    ).join('')}
+                    <hr style="margin: 16px 0; border: 1px solid #e2e8f0;">
+                    <p style="color: #a0aec0; font-size: 13px;"><strong>Added by:</strong> ${patient.addedByName || patient.addedBy}</p>
+                </div>
+            `;
+
+            document.getElementById('patientModal').classList.add('active');
+        };
+
+        window.closeModal = function() {
+            document.getElementById('patientModal').classList.remove('active');
+            window.currentPatientId = null;
+        };
+
+        window.editPatient = function() {
+            if (!window.currentPatientId) return;
+            
+            const patient = window.patients.find(p => p.id === window.currentPatientId);
+            if (!patient) return;
+
+            window.editingPatientId = window.currentPatientId;
+
+            document.getElementById('patientName').value = patient.patientName || '';
+            document.getElementById('patientId').value = patient.patientId;
+            document.getElementById('surgeryDate').value = patient.surgeryDate;
+            document.getElementById('hospital').value = patient.hospital || '';
+            document.getElementById('procedure').value = patient.procedure;
+            document.getElementById('diagnosis').value = patient.diagnosis || '';
+            document.getElementById('age').value = patient.age || '';
+
+            // Set complications checkboxes
+            document.querySelectorAll('.checkbox-item input[type="checkbox"]').forEach(cb => {
+                cb.checked = patient.complications && patient.complications.includes(cb.value);
+            });
+
+            document.getElementById('complicationNotes').value = patient.complicationNotes || '';
+            document.getElementById('clavienDindo').value = patient.clavienDindo || '';
+            document.getElementById('woundStatus').value = patient.woundStatus || '';
+            document.getElementById('lengthOfStay').value = patient.lengthOfStay || '';
+            document.getElementById('dischargeDate').value = patient.dischargeDate || '';
+            document.getElementById('readmission').value = patient.readmission || 'No';
+            document.getElementById('readmissionNotes').value = patient.readmissionNotes || '';
+            document.getElementById('remarks').value = patient.remarks || '';
+
+            window.customAuditFields.forEach(field => {
+                const input = document.getElementById(`audit-${field.id}`);
+                if (input && patient.customAudit) {
+                    input.value = patient.customAudit[field.name] || '';
+                }
+            });
+
+            document.querySelector('#addTab h2').textContent = 'Edit Patient Record';
+
+            closeModal();
+            switchTab('add');
+        };
+
+        window.renderCustomAuditList = function() {
+            const container = document.getElementById('customAuditList');
+            
+            if (window.customAuditFields.length === 0) {
+                container.innerHTML = '<p style="color: #718096; font-style: italic;">No custom audit criteria added yet.</p>';
+                return;
+            }
+
+            container.innerHTML = window.customAuditFields.map(field => `
+                <div style="display: flex; gap: 12px; margin-bottom: 12px; align-items: center;">
+                    <input type="text" value="${field.name}" readonly style="flex: 1; background: #f7fafc; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                    <button class="btn btn-small btn-remove" onclick="removeCustomAudit(${field.id})">Remove</button>
+                </div>
+            `).join('');
+        };
+
+        window.renderCustomAuditInputs = function() {
+            const container = document.getElementById('customAuditContainer');
+            
+            if (window.customAuditFields.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = `
+                <div style="margin-top: 24px; padding-top: 24px; border-top: 2px solid #e2e8f0;">
+                    <h3 style="margin-bottom: 16px; color: #2d3748;">Custom Audit Criteria</h3>
+                    ${window.customAuditFields.map(field => `
+                        <div class="form-group">
+                            <label>${field.name}</label>
+                            <input type="text" id="audit-${field.id}">
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        };
+
+        window.updateStats = function() {
+            const total = window.patients.length;
+            const withComplications = window.patients.filter(p => p.complications && p.complications.length > 0).length;
+            const readmitted = window.patients.filter(p => p.readmission === 'Yes').length;
+            const active = window.patients.filter(p => !p.dischargeDate).length;
+
+            document.getElementById('totalPatients').textContent = total;
+            document.getElementById('complicationCount').textContent = withComplications;
+            document.getElementById('complicationRate').textContent = total > 0 ? `${((withComplications/total)*100).toFixed(1)}%` : '0%';
+            document.getElementById('readmissionCount').textContent = readmitted;
+            document.getElementById('readmissionRate').textContent = total > 0 ? `${((readmitted/total)*100).toFixed(1)}%` : '0%';
+            document.getElementById('activeCount').textContent = active;
+        };
+
+        window.resetForm = function() {
+            document.getElementById('patientName').value = '';
+            document.getElementById('patientId').value = '';
+            document.getElementById('surgeryDate').value = '';
+            document.getElementById('hospital').value = '';
+            document.getElementById('procedure').value = '';
+            document.getElementById('diagnosis').value = '';
+            document.getElementById('age').value = '';
+
+            document.querySelectorAll('.checkbox-item input[type="checkbox"]').forEach(cb => cb.checked = false);
+
+            document.getElementById('complicationNotes').value = '';
+            document.getElementById('clavienDindo').value = '';
+            document.getElementById('woundStatus').value = '';
+            document.getElementById('lengthOfStay').value = '';
+            document.getElementById('dischargeDate').value = '';
+            document.getElementById('readmission').value = 'No';
+            document.getElementById('readmissionNotes').value = '';
+            document.getElementById('remarks').value = '';
+
+            window.customAuditFields.forEach(field => {
+                const input = document.getElementById(`audit-${field.id}`);
+                if (input) input.value = '';
+            });
+
+            window.editingPatientId = null;
+            document.querySelector('#addTab h2').textContent = 'Add Patient Record';
+        };
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-GB', { 
+                day: 'numeric', 
+                month: 'short', 
+                year: 'numeric' 
+            });
+        }
+
+        // Export functions
+        window.exportData = function() {
+            if (window.patients.length === 0) {
+                alert('No patient records to export');
+                return;
+            }
+
+            const headers = [
+                'Patient Name', 'Patient ID', 'Surgery Date', 'Hospital', 'Procedure', 'Diagnosis', 'Age',
+                'Complications', 'Complication Details', 'Clavien-Dindo Grade', 'Wound Status at Discharge',
+                'Length of Stay', 'Discharge Date', 'Readmission', 'Readmission Details', 'Remarks', 'Added By'
+            ];
+
+            const customAuditNames = window.customAuditFields.map(f => f.name);
+            const allHeaders = [...headers, ...customAuditNames];
+
+            const rows = window.patients.map(p => {
+                const baseData = [
+                    p.patientName || '', p.patientId, p.surgeryDate, p.hospital || '', p.procedure,
+                    p.diagnosis || '', p.age || '', p.complications.join('; '), p.complicationNotes || '',
+                    p.clavienDindo || '', p.woundStatus || '', p.lengthOfStay || '', p.dischargeDate || '',
+                    p.readmission, p.readmissionNotes || '', p.remarks || '', p.addedBy || ''
+                ];
+
+                const customData = customAuditNames.map(name => p.customAudit?.[name] || '');
+                return [...baseData, ...customData];
+            });
+
+            let csv = allHeaders.map(h => `"${h}"`).join(',') + '\n';
+            rows.forEach(row => {
+                csv += row.map(field => `"${field}"`).join(',') + '\n';
+            });
+
+            downloadFile(csv, `postop-audit-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+        };
+
+        window.exportSPSS = function() {
+            if (window.patients.length === 0) {
+                alert('No patient records to export');
+                return;
+            }
+
+            const headers = [
+                'PatientName', 'PatientID', 'SurgeryDate', 'Hospital', 'Procedure', 'Diagnosis', 'Age', 
+                'HasComplications', 'WoundInfection', 'Bleeding', 'Pneumonia', 
+                'DVT_PE', 'Sepsis', 'AnastomoticLeak', 'FlapLoss_Partial', 'FlapLoss_Total', 
+                'OC_Fistula', 'CardiacEvent', 'OtherComplication',
+                'ClavienDindo_Code', 'WoundStatus_Code', 'LengthOfStay', 'DischargeDate', 
+                'Readmitted_Code', 'Remarks', 'AddedBy'
+            ];
+
+            const rows = window.patients.map(p => {
+                const woundCodes = {
+                    'Clean, healing well': 1,
+                    'Minor inflammation': 2,
+                    'Infection': 3,
+                    'Dehiscence': 4,
+                    'Other': 5
+                };
+
+                const clavienCodes = {
+                    'Grade I': 1, 'Grade II': 2, 'Grade IIIa': 3, 'Grade IIIb': 4,
+                    'Grade IVa': 5, 'Grade IVb': 6, 'Grade V': 7
+                };
+
+                return [
+                    p.patientName || '', p.patientId, p.surgeryDate, p.hospital || '', p.procedure,
+                    p.diagnosis || '', p.age || '', p.complications.length > 0 ? 1 : 0,
+                    p.complications.includes('Wound Infection') ? 1 : 0,
+                    p.complications.includes('Post-op Bleeding') ? 1 : 0,
+                    p.complications.includes('Pneumonia') ? 1 : 0,
+                    p.complications.includes('DVT/PE') ? 1 : 0,
+                    p.complications.includes('Sepsis') ? 1 : 0,
+                    p.complications.includes('Anastomotic Leak') ? 1 : 0,
+                    p.complications.includes('Flap Loss - Partial') ? 1 : 0,
+                    p.complications.includes('Flap Loss - Total') ? 1 : 0,
+                    p.complications.includes('OC Fistula') ? 1 : 0,
+                    p.complications.includes('Cardiac Event') ? 1 : 0,
+                    p.complications.includes('Other') ? 1 : 0,
+                    clavienCodes[p.clavienDindo] || '', woundCodes[p.woundStatus] || '',
+                    p.lengthOfStay || '', p.dischargeDate || '', p.readmission === 'Yes' ? 1 : 0,
+                    p.remarks || '', p.addedBy || ''
+                ];
+            });
+
+            let csv = headers.join(',') + '\n';
+            rows.forEach(row => {
+                csv += row.map(field => `"${field}"`).join(',') + '\n';
+            });
+
+            csv += '\n\n# SPSS Variable Coding:\n';
+            csv += '# HasComplications: 0=No, 1=Yes\n';
+            csv += '# All complication variables: 0=No, 1=Yes\n';
+            csv += '# WoundStatus_Code: 1=Clean/healing, 2=Minor inflammation, 3=Infection, 4=Dehiscence, 5=Other\n';
+            csv += '# Readmitted_Code: 0=No, 1=Yes\n';
+
+            downloadFile(csv, `postop-audit-spss-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+        };
+
+        window.exportAllData = function() {
+            const backup = {
+                patients: window.patients,
+                customAuditFields: window.customAuditFields,
+                exportDate: new Date().toISOString()
+            };
+
+            const json = JSON.stringify(backup, null, 2);
+            downloadFile(json, `postop-backup-${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+            alert('✅ Complete backup downloaded!');
+        };
+
+        window.importData = function() {
+            document.getElementById('fileInput').click();
+        };
+
+        document.getElementById('fileInput').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(event) {
+                try {
+                    const backup = JSON.parse(event.target.result);
+                    
+                    if (confirm('This will merge with existing shared data. Continue?')) {
+                        setSyncStatus('Importing...', false);
+
+                        // Import patients
+                        for (const patientData of backup.patients || []) {
+                            const recordId = patientData.id || Date.now().toString() + Math.random();
+                            await setDoc(doc(db, SHARED_COLLECTION, 'patients', 'records', recordId), {
+                                ...patientData,
+                                addedBy: patientData.addedBy || window.currentUser.email,
+                                addedByName: patientData.addedByName || window.currentUser.displayName,
+                                updatedAt: serverTimestamp()
+                            });
+                        }
+
+                        // Import custom audit fields
+                        if (backup.customAuditFields && backup.customAuditFields.length > 0) {
+                            await setDoc(doc(db, SHARED_COLLECTION, 'settings'), {
+                                customAuditFields: backup.customAuditFields,
+                                updatedAt: serverTimestamp()
+                            });
+                        }
+
+                        setSyncStatus('Synced', true);
+                        alert('✅ Data imported successfully!');
+                    }
+                } catch (error) {
+                    console.error('Error importing data:', error);
+                    showError('Error importing data: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+            
+            this.value = '';
+        });
+
+        function downloadFile(content, filename, type) {
+            const blob = new Blob([content], { type: type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', renderPatients);
+        document.getElementById('filterStatus').addEventListener('change', renderPatients);
+        document.getElementById('filterDate').addEventListener('change', renderPatients);
+
+        document.getElementById('patientModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Set today's date as default
+        document.getElementById('surgeryDate').valueAsDate = new Date();
+    </script>
+</body>
+</html>
