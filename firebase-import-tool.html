@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Import Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+        }
+
+        .step {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: inherit;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .success {
+            background: #c6f6d5;
+            color: #2f855a;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .warning {
+            background: #feebc8;
+            color: #c05621;
+        }
+
+        pre {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        .progress {
+            background: #e2e8f0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-bar {
+            background: #667eea;
+            height: 100%;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Firebase Import Tool</h1>
+        <p class="subtitle">Fixes data format issues and imports to Firebase</p>
+
+        <div class="step">
+            <div class="step-title">Step 1: Sign in with Google</div>
+            <div id="loginStatus">Not signed in</div>
+            <button class="btn btn-primary" id="signInBtn" onclick="signIn()">Sign In with Google</button>
+        </div>
+
+        <div class="step">
+            <div class="step-title">Step 2: Select your backup JSON file</div>
+            <input type="file" id="fileInput" accept=".json" disabled>
+            <div id="fileInfo"></div>
+        </div>
+
+        <div class="step">
+            <div class="step-title">Step 3: Import to Firebase</div>
+            <button class="btn btn-primary" id="importBtn" onclick="startImport()" disabled>
+                Start Import
+            </button>
+            <div class="progress" id="progressBar" style="display: none;">
+                <div class="progress-bar" id="progress"></div>
+            </div>
+            <div id="status"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+        import { getFirestore, doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBQ8slJIJmDcSkpI0GuJU6GAZNuupY-mb4",
+            authDomain: "surgical-tracker-fd4e4.firebaseapp.com",
+            projectId: "surgical-tracker-fd4e4",
+            storageBucket: "surgical-tracker-fd4e4.firebasestorage.app",
+            messagingSenderId: "127110170150",
+            appId: "1:127110170150:web:66567dbf2ea55af9ae88e7",
+            measurementId: "G-CYEEBS48GK"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        window.currentUser = null;
+        window.backupData = null;
+
+        // Authentication
+        window.signIn = async function() {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error('Sign in error:', error);
+                alert('Sign in failed: ' + error.message);
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.currentUser = user;
+                document.getElementById('loginStatus').innerHTML = `
+                    <div style="color: #38a169; margin-top: 10px;">
+                        ✅ Signed in as ${user.email}
+                    </div>
+                `;
+                document.getElementById('signInBtn').style.display = 'none';
+                document.getElementById('fileInput').disabled = false;
+            } else {
+                window.currentUser = null;
+                document.getElementById('loginStatus').innerHTML = 'Not signed in';
+                document.getElementById('signInBtn').style.display = 'block';
+                document.getElementById('fileInput').disabled = true;
+                document.getElementById('importBtn').disabled = true;
+            }
+        });
+
+        // File handling
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    window.backupData = data;
+                    
+                    const caseCount = (data.cases || []).length;
+                    const fieldCount = (data.customFields || []).length;
+                    
+                    document.getElementById('fileInfo').innerHTML = `
+                        <div class="status success">
+                            ✅ File loaded successfully<br>
+                            📊 Found ${caseCount} cases<br>
+                            🏷️ Found ${fieldCount} custom fields
+                        </div>
+                    `;
+                    
+                    document.getElementById('importBtn').disabled = false;
+                } catch (error) {
+                    document.getElementById('fileInfo').innerHTML = `
+                        <div class="status error">
+                            ❌ Invalid JSON file: ${error.message}
+                        </div>
+                    `;
+                    window.backupData = null;
+                    document.getElementById('importBtn').disabled = true;
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // Import function with comprehensive sanitization
+        window.startImport = async function() {
+            if (!window.currentUser || !window.backupData) return;
+
+            const cases = window.backupData.cases || [];
+            const customFields = window.backupData.customFields || [];
+
+            document.getElementById('importBtn').disabled = true;
+            document.getElementById('progressBar').style.display = 'block';
+            
+            let successCount = 0;
+            let errorCount = 0;
+            const errors = [];
+
+            // Sanitize function - converts everything to Firebase-safe types
+            function sanitize(obj) {
+                if (obj === null || obj === undefined) return '';
+                if (typeof obj === 'string') return obj;
+                if (typeof obj === 'number') return obj;
+                if (typeof obj === 'boolean') return obj;
+                
+                if (Array.isArray(obj)) {
+                    return obj.map(item => {
+                        if (typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean') {
+                            return item;
+                        }
+                        return String(item);
+                    });
+                }
+                
+                if (typeof obj === 'object') {
+                    const clean = {};
+                    for (const key in obj) {
+                        if (obj.hasOwnProperty(key)) {
+                            clean[key] = sanitize(obj[key]);
+                        }
+                    }
+                    return clean;
+                }
+                
+                return String(obj);
+            }
+
+            // Import cases one by one with detailed logging
+            for (let i = 0; i < cases.length; i++) {
+                const caseData = cases[i];
+                
+                try {
+                    // Create completely safe data object
+                    const safeData = {
+                        date: String(caseData.date || ''),
+                        startTime: String(caseData.startTime || ''),
+                        duration: Number(caseData.duration) || 0,
+                        procedureName: String(caseData.procedureName || 'Imported'),
+                        hospital: String(caseData.hospital || ''),
+                        patientName: String(caseData.patientName || ''),
+                        patientId: String(caseData.patientId || ''),
+                        patientAge: String(caseData.patientAge || ''),
+                        patientSex: String(caseData.patientSex || ''),
+                        surgeonRole: String(caseData.surgeonRole || 'Primary'),
+                        complications: String(caseData.complications || ''),
+                        customFields: {},
+                        updatedAt: serverTimestamp()
+                    };
+
+                    // Only add customFields if they exist and sanitize them
+                    if (caseData.customFields && typeof caseData.customFields === 'object') {
+                        for (const key in caseData.customFields) {
+                            safeData.customFields[key] = String(caseData.customFields[key] || '');
+                        }
+                    }
+
+                    const caseId = `imported_${Date.now()}_${i}_${Math.random().toString(36).substr(2, 6)}`;
+                    
+                    await setDoc(doc(db, 'users', window.currentUser.uid, 'cases', caseId), safeData);
+                    successCount++;
+                    
+                } catch (error) {
+                    errorCount++;
+                    errors.push({index: i, error: error.message});
+                    console.error('Failed to import case', i, error);
+                }
+
+                // Update progress
+                const progress = ((i + 1) / cases.length) * 100;
+                document.getElementById('progress').style.width = progress + '%';
+                document.getElementById('status').innerHTML = `
+                    <div class="status">
+                        Importing... ${i + 1}/${cases.length}<br>
+                        ✅ Success: ${successCount}<br>
+                        ❌ Errors: ${errorCount}
+                    </div>
+                `;
+
+                // Small delay to avoid rate limits
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+            // Import custom fields
+            if (customFields.length > 0) {
+                try {
+                    await setDoc(doc(db, 'users', window.currentUser.uid, 'settings', 'customFields'), {
+                        fields: sanitize(customFields),
+                        updatedAt: serverTimestamp()
+                    });
+                } catch (error) {
+                    console.error('Failed to import custom fields:', error);
+                }
+            }
+
+            // Show final result
+            if (errorCount === 0) {
+                document.getElementById('status').innerHTML = `
+                    <div class="status success">
+                        ✅ Import completed successfully!<br>
+                        📊 Imported ${successCount} cases<br>
+                        🏷️ Imported ${customFields.length} custom fields<br><br>
+                        You can now close this page and refresh your OT Logbook app.
+                    </div>
+                `;
+            } else {
+                document.getElementById('status').innerHTML = `
+                    <div class="status warning">
+                        ⚠️ Import completed with some errors<br>
+                        ✅ Success: ${successCount} cases<br>
+                        ❌ Failed: ${errorCount} cases<br><br>
+                        Check browser console (F12) for details.
+                    </div>
+                `;
+                console.error('Import errors:', errors);
+            }
+
+            document.getElementById('progressBar').style.display = 'none';
+        };
+    </script>
+</body>
+</html>
